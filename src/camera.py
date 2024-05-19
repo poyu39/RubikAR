@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import argparse
 
 class Camera:
     def __init__(self, id=0):
@@ -55,7 +56,10 @@ class Camera:
         cv2.imshow('frame', self.frame)
 
 if __name__ == '__main__':
-    cam = Camera(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--id', type=int, default=0)
+    args = parser.parse_args()
+    cam = Camera(args.id)
     while True:
         cam.update()
         cam.draw_contours()
