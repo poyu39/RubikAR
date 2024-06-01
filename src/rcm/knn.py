@@ -3,7 +3,7 @@ import math
 
 class Knn:
     def __init__(self):
-        f = open('./dataset/output.txt', 'r')
+        f = open('./rcm/dataset/output.txt', 'r')
         data = np.array([])
         line = f.readlines()
         data = np.append(data, line)
@@ -21,12 +21,18 @@ class Knn:
 
         self.X[..., 0] = X1
         self.X[..., 1] = X2
+        
 
     def predict_color(self, feature_Mat):
         final_prediction_seq = np.empty(9, dtype=str)
         for i, feature in enumerate(feature_Mat):
-            final_prediction_seq[i] = str(self.predict_single_face_color(feature))
-        return final_prediction_seq
+            final_prediction_seq[i] = self.predict_single_face_color(feature)
+        # 更改順序
+        ordered_seq = [0, 3, 6, 1, 4, 7, 2, 5, 8]
+        final_prediction_seq_ordered = np.empty(9, dtype=str)
+        for i, index in enumerate(ordered_seq):
+            final_prediction_seq_ordered[i] = final_prediction_seq[index]
+        return list(final_prediction_seq_ordered)
 
     def predict_single_face_color(self, features):
         closest_dist = np.zeros((540))
@@ -40,5 +46,5 @@ class Knn:
         u = u[~(u == np.array([0.0, None])).all(1)]
         sorted = u[u[:, 0].argsort()]
         colour = np.unique(sorted[1:20, 1])[0]
-        final_colour = str(colour)
+        final_colour = str(colour).upper()
         return final_colour
