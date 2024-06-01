@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import knn
+from .knn import Knn
 
 
 class Detector:
@@ -8,7 +8,7 @@ class Detector:
         self.camera = cv2.VideoCapture(camera)
         self.camera_center = (int(self.camera.get(3) / 2), int(self.camera.get(4) / 2))
         self.cal_cordintes()
-        self.knn = knn.Knn()
+        self.knn = Knn()
     
     def cal_cordintes(self):
         self.cordintes = np.array([])
@@ -23,6 +23,7 @@ class Detector:
     
     def update_frame(self):
         _, frame = self.camera.read()
+        self.frame = frame
         return frame
     
     def draw_face_cordinates(self, frame):
@@ -32,7 +33,9 @@ class Detector:
             cv2.rectangle(frame, point1, point2, (255, 255, 255), 2)
         return frame
     
-    def detect_color(self, frame):
+    def detect_color(self, frame=None):
+        if not frame:
+            frame = self.frame
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         frames = []
         for cordinate in self.cordintes:
@@ -43,7 +46,12 @@ class Detector:
             sat = face[..., 1].flatten()
             hist_hue, hist_sat = np.histogram(hue, bins=np.arange(256)), np.histogram(sat, bins=np.arange(256))
             feature_matrix[i] = [np.argmax(hist_hue[0]), np.argmax(hist_sat[0])]
-        print(self.knn.predict_color(feature_matrix))
+        colors = self.knn.predict_color(feature_matrix)
+        return colors
+        # print(self.knn.predict_color(feature_matrix))
+        
+    def show_frame(self, frame):
+        cv2.imshow('frame', frame)
 
 
 if __name__ == '__main__':
@@ -52,6 +60,6 @@ if __name__ == '__main__':
         frame = detector.update_frame()
         frame_face_cordinates = detector.draw_face_cordinates(frame)
         detector.detect_color(frame_face_cordinates)
-        cv2.imshow('dectector', frame_face_cordinates)
+        detector.show_frame(frame_face_cordinates)
         if (cv2.waitKey(1) == 27):  # esc key
             break
