@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 class Output:
     def __init__(self):
-        self.f = open('./dataset/output.txt', 'w')
+        self.f = open('./rcm/dataset/output.txt', 'w')
         self.color = {
             'r': 'red',
             'b': 'blue',
@@ -31,13 +31,13 @@ class Output:
 
 if __name__ == '__main__':
     output = Output()
-    for folder in os.listdir('./dataset/train'):
+    for folder in os.listdir('./rcm/dataset/train'):
         color_id = str(folder)
-        dir = f'./dataset/train/{color_id}'
+        dir = f'./rcm/dataset/train/{color_id}'
         for img in os.listdir(dir):
             pixel = cv2.imread(f'{dir}/{img}')
             hsv = cv2.cvtColor(pixel, cv2.COLOR_BGR2HSV)
             output.histogram_cal(hsv, color_id)
     output.__del__()
-    plt.savefig('./dataset/output.png')
+    plt.savefig('./rcm/dataset/output.png')
     plt.show()

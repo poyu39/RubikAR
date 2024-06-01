@@ -40,7 +40,7 @@ class Dataset:
             blocks.append(frame[cordinate[0, 1]:cordinate[1, 1], cordinate[0, 0]:cordinate[1, 0]])
         if cv2.waitKey(1) == ord('s'):
             for block in blocks:
-                dir = f'./dataset/train/{self.color}'
+                dir = f'./rcm/dataset/train/{self.color}'
                 if not os.path.exists(dir):
                     os.makedirs(dir)
                 id = len(os.listdir(dir)) + 1
@@ -57,6 +57,6 @@ if __name__ == '__main__':
         frame = dataset.update_frame()
         dataset.take_picture(frame)
         frame_face_cordinates = dataset.draw_face_cordinates(frame)
-        cv2.imshow('dectector', frame_face_cordinates)
+        cv2.imshow('dataset', frame_face_cordinates)
         if cv2.waitKey(1) == 27:
             break
