@@ -1,8 +1,9 @@
 import sys
 import json
+from pprint import pprint
 
 import pygame
-from magiccube.cube import Cube, Face
+from magiccube.cube import Cube, Face, CubeMove
 from magiccube.solver.basic.basic_solver import BasicSolver
 
 from rcm.detector import Detector
@@ -17,7 +18,6 @@ class CubeMap:
         pygame.init()
         self.window = pygame.display.set_mode((800, 600))
         self.window.fill((255, 255, 255))
-        
         self.decetor = dectector
         
         # mode
@@ -31,38 +31,34 @@ class CubeMap:
                 U
             L   F   R   B
                 D
+                
+                Y
+            B   O   G   R
+                W
             
             1   2   3
             4   5   6
             7   8   9
         '''
-        # 創建空白 map
-        self.map = {
-            'U': ['X'] * 9,
-            'R': ['X'] * 9,
-            'F': ['X'] * 9,
-            'D': ['X'] * 9,
-            'L': ['X'] * 9,
-            'B': ['X'] * 9,
+        blank_map = {
+            'U': ['X', 'X', 'X', 'X', 'Y', 'X', 'X', 'X', 'X'],
+            'L': ['X', 'X', 'X', 'X', 'R', 'X', 'X', 'X', 'X'],
+            'F': ['X', 'X', 'X', 'X', 'G', 'X', 'X', 'X', 'X'],
+            'R': ['X', 'X', 'X', 'X', 'O', 'X', 'X', 'X', 'X'],
+            'B': ['X', 'X', 'X', 'X', 'B', 'X', 'X', 'X', 'X'],
+            'D': ['X', 'X', 'X', 'X', 'W', 'X', 'X', 'X', 'X']
         }
-        # 每個面中間是固定的顏色
-        self.map['U'][4] = 'Y'
-        self.map['L'][4] = 'R'
-        self.map['F'][4] = 'G'
-        self.map['R'][4] = 'O'
-        self.map['B'][4] = 'B'
-        self.map['D'][4] = 'W'
+        self.map = blank_map
     
-    def get_seq_map(self):
+    def get_seq_map(self, map=None):
         '''
             取得 magiccube 所需要的序列
             
             Return:
                 list: sequence of the cube map
         '''
-        face_index = 'ULFRBD'
         seq_map = []
-        for face in face_index:
+        for face in map:
             for i in range(9):
                 seq_map.append(self.map[face][i])
         return seq_map
@@ -128,12 +124,13 @@ class CubeMap:
             return (0, 0, 0)
         elif color == 'select': # light blue
             return (137, 235, 242)
+        elif color == 'arrow':
+            return (175, 90, 200) # purple
     
     def show_map(self, map=None):
         '''
             顯示 Rubik's cube map
         '''
-        self.window.fill((255, 255, 255))
         map = map or self.map
         for face in map:
             for i, color in enumerate(map[face]):
@@ -167,42 +164,103 @@ class CubeMap:
         self.show_map(self.tmp_map)
         self.draw_select_box(face)
     
-    def cube_to_seq_map(self, cube: Cube):
-        seq_map = []
-        for face in 'ULFRBD':
-            seq_map.append(cube.get_face_flat())
-        return seq_map
+    def cube_to_map(self, cube: Cube):
+        tmp_map = self.map.copy()
+        faces = ['U', 'L', 'F', 'R', 'B', 'D']
+        for face in faces:
+            colors = cube.get_face(Face.__getitem__(face))
+            color_seq = []
+            for row in colors:
+                for color in row:
+                    color_seq.append(color.name)
+            tmp_map[face] = color_seq
+        return tmp_map
     
     def solve_map(self):
         '''
             解答 Rubik's cube map
         '''
-        seq_map = self.get_seq_map()
+        seq_map = self.get_seq_map(self.map)
         seq = ''.join(seq_map)
-        self.cube = Cube(3, seq)
-        solver = BasicSolver(self.cube)
-        self.solution = solver.solve()
+        cube = Cube(3, seq)
+        solver = BasicSolver(Cube(3, seq))
+        solution = solver.solve()
         self.now_step = 0
         # 模擬每一步的 map
-        self.steps_seq_map = []
-        for step in self.solution:
-            print(step)
-            self.cube.rotate(str(step))
-            print(self.cube_to_seq_map(self.cube))
-            self.steps_seq_map.append(self.cube.get_all_faces())
+        self.steps_map = []
+        self.solution = []
+        for step in solution:
+            step = str(step)
+            if step[0] != 'D':
+                self.solution.append(step)
+                cube.rotate(step)
+                self.steps_map.append(self.cube_to_map(cube))
+            else:
+                # D -> X F X'
+                sp_step = ['X', "X'"]
+                if len(step) == 2:
+                    sp_step.insert(1, f'F{step[1]}')
+                else:
+                    sp_step.insert(1, 'F')
+                for s in sp_step:
+                    self.solution.append(s)
+                    cube.rotate(s)
+                    self.steps_map.append(self.cube_to_map(cube))
     
-    def draw_solution_move(self, move):
+    def draw_arrow(self, action: CubeMove):
         '''
             繪製解答箭頭步驟
         '''
-        if len(move) == 1:
-            move = move + '1'
+        arrows = []
+        action = str(action)
+        # ⭡ ⭢ ⭣ ⭠
+        if action[0] == 'L':
+            arrows.append((0, 6))
+        elif action[0] == 'R':
+            arrows.append((8, 2))
+        elif action[0] == 'F':
+            arrows.append((6, 8))
+        elif action[0] == 'B':
+            arrows.append((2, 0))
+        elif action[0] == 'U':
+            arrows.append((0, 2))
+            arrows.append((2, 8))
+            arrows.append((8, 6))
+            arrows.append((6, 0))
+        elif action[0] == 'X':
+            arrows.append((6, 0))
+            arrows.append((7, 1))
+            arrows.append((8, 2))
+        
+        if len(action) == 2:
+            if action[1] == "'":
+                arrows = [[arrow[1], arrow[0]] for arrow in arrows]
+        
+        for arrow in arrows:
+            self.decetor.draw_arrow(arrow, self.get_color('arrow'))
     
     def draw_solution(self):
         '''
-            繪製解答
+            繪製解答步驟
         '''
-        pass
+        can_draw = False
+        colors = self.decetor.detect_color()
+        if self.now_step == 0:
+            if self.map['U'] == colors:
+                can_draw = True
+        else:
+            if self.steps_map[self.now_step - 1]['U'] == colors:
+                can_draw = True
+        
+        if self.steps_map[self.now_step]['U'] == colors:
+            self.now_step += 1
+            self.map = self.steps_map[self.now_step - 1]
+            self.show_map()
+            can_draw = True
+        
+        if can_draw and self.now_step < len(self.steps_map) - 1:
+            self.draw_arrow(self.solution[self.now_step])
+            print(f"{self.now_step} {can_draw}\t {str(self.solution[self.now_step])}, {colors}, {self.steps_map[self.now_step]['U']}")
     
     def event_handler(self):
         '''
@@ -213,7 +271,14 @@ class CubeMap:
             self.event = event
             self.key_handler()
             self.exit_handler()
-            
+        
+        if self.mode == 'solve':
+            if self.now_step < len(self.steps_map):
+                self.draw_solution()
+            else:
+                print('solve-end')
+                self.mode = 'finish'
+
         pygame.display.update()
     
     def key_handler(self):
@@ -244,20 +309,33 @@ class CubeMap:
                 self.show_map()
                 self.mode = 'solve'
                 self.solve_map()
+            elif self.event.key == pygame.K_LEFT:
+                if self.mode == 'solve' and self.now_step > 0:
+                    self.now_step -= 1
+                    self.show_map(self.steps_map[self.now_step])
+            elif self.event.key == pygame.K_RIGHT:
+                if self.mode == 'solve' and self.now_step < len(self.steps_map) - 1:
+                    self.now_step += 1
+                    self.show_map(self.steps_map[self.now_step])
     
     def title_handler(self):
         '''
             標題事件處理
         '''
+        # 只清除標題
+        pygame.draw.rect(self.window, (255, 255, 255), (0, 0, 800, 50))
         if self.mode == 'init':
-            text = '請按 s 掃描更新當前的面，如果掃描完畢請按 n 進行下一個面的掃描。'
+            texts = ['請按 s 掃描更新當前的面，如果掃描完畢請按 n 進行下一個面的掃描。']
         elif self.mode == 'scan-map':
-            text = '請按 s 掃描更新當前的面，如果掃描完畢請按 n 進行下一個面的掃描。'
+            texts = ['請按 s 掃描更新當前的面，如果掃描完畢請按 n 進行下一個面的掃描。']
         elif self.mode == 'solve':
-            text = '解答中...'
+            texts = [f'解進度 {self.now_step} / {len(self.steps_map) - 1}', '剩餘步驟: ' + ' '.join(self.solution[self.now_step:])]
+        elif self.mode == 'finish':
+            texts = ['完成']
         font = pygame.font.Font('./font/msjh.ttc', 18)
-        text = font.render(text, True, (0, 0, 0))
-        self.window.blit(text, (10, 10))
+        for i, text in enumerate(texts):
+            text_surface = font.render(text, True, (0, 0, 0))
+            self.window.blit(text_surface, (10, 10 + i * 20))
     
     def exit_handler(self):
         '''
