@@ -28,11 +28,11 @@ class Knn:
         for i, feature in enumerate(feature_Mat):
             final_prediction_seq[i] = self.predict_single_face_color(feature)
         # 更改順序
-        ordered_seq = [0, 3, 6, 1, 4, 7, 2, 5, 8]
-        final_prediction_seq_ordered = np.empty(9, dtype=str)
-        for i, index in enumerate(ordered_seq):
-            final_prediction_seq_ordered[i] = final_prediction_seq[index]
-        return list(final_prediction_seq_ordered)
+        # ordered_seq = [0, 3, 6, 1, 4, 7, 2, 5, 8]
+        # final_prediction_seq_ordered = np.empty(9, dtype=str)
+        # for i, index in enumerate(ordered_seq):
+        #     final_prediction_seq_ordered[i] = final_prediction_seq[index]
+        return list(final_prediction_seq)
 
     def predict_single_face_color(self, features):
         closest_dist = np.zeros((540))

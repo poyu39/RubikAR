@@ -14,24 +14,32 @@ class Detector:
         self.cordintes = np.array([])
         block_size = 130
         offset_camera_center = (self.camera_center[0] - block_size, self.camera_center[1] - block_size)
-        for i in range(3):
-            for j in range(3):
+        for j in range(3):
+            for i in range(3):
                 point1 = (offset_camera_center[0] + (i - 1) * block_size, offset_camera_center[1] + (j - 1) * block_size)
                 point2 = (offset_camera_center[0] + (i) * block_size, offset_camera_center[1] + (j) * block_size)
                 self.cordintes = np.append(self.cordintes, [point1, point2])
         self.cordintes = self.cordintes.reshape((9, 2, 2)).astype(int)
+        self.arrow_points = []
+        for i in range(9):
+            point = (self.cordintes[i, 0, 0] + 65, self.cordintes[i, 0, 1] + 65)
+            self.arrow_points.append(point)
+        
     
     def update_frame(self):
         _, frame = self.camera.read()
         self.frame = frame
-        return frame
     
-    def draw_face_cordinates(self, frame):
+    def draw_face_cordinates(self):
         for cordinate in self.cordintes:
             point1 = tuple(cordinate[0])
             point2 = tuple(cordinate[1])
-            cv2.rectangle(frame, point1, point2, (255, 255, 255), 2)
-        return frame
+            cv2.rectangle(self.frame, point1, point2, (255, 255, 255), 2)
+    
+    def draw_arrow(self, arrow, color):
+        point1 = self.arrow_points[arrow[0]]
+        point2 = self.arrow_points[arrow[1]]
+        self.frame = cv2.arrowedLine(self.frame, point1, point2, color, 10)
     
     def detect_color(self, frame=None):
         if not frame:
@@ -48,10 +56,9 @@ class Detector:
             feature_matrix[i] = [np.argmax(hist_hue[0]), np.argmax(hist_sat[0])]
         colors = self.knn.predict_color(feature_matrix)
         return colors
-        # print(self.knn.predict_color(feature_matrix))
         
-    def show_frame(self, frame):
-        cv2.imshow('frame', frame)
+    def show_frame(self):
+        cv2.imshow('frame', self.frame)
 
 
 if __name__ == '__main__':
