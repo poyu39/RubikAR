@@ -111,10 +111,10 @@ class CubeMap:
             顯示 Rubik's cube map
         '''
         self.window.fill((255, 255, 255))
-        for seq in self.map:
-            for i, color in enumerate(self.map[seq]):
+        for face in self.map:
+            for i, color in enumerate(self.map[face]):
                 if color is not None:
-                    x , y = self.get_position(seq, i)
+                    x , y = self.get_position(face, i)
                     pygame.draw.rect(self.window, self.get_color(color), (x, y, 50, 50))
                     pygame.draw.rect(self.window, self.get_color('border'), (x, y, 50, 50), 1)
         pygame.display.update()
