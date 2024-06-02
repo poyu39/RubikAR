@@ -6,6 +6,9 @@ from matplotlib import pyplot as plt
 
 class Output:
     def __init__(self):
+        '''
+            資料集前處理
+        '''
         self.f = open('./rcm/dataset/output.txt', 'w')
         self.color = {
             'r': 'red',
@@ -17,6 +20,9 @@ class Output:
         }
     
     def histogram_cal(self, hsv, color_id):
+        '''
+            計算直方圖
+        '''
         hue = hsv[..., 0].flatten()
         sat = hsv[..., 1].flatten()
         hist_hue = np.histogram(hue, bins=np.arange(256))

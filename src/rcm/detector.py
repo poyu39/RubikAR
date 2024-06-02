@@ -5,12 +5,18 @@ from .knn import Knn
 
 class Detector:
     def __init__(self, camera=0):
+        '''
+            Opencv 的偵測相機
+        '''
         self.camera = cv2.VideoCapture(camera)
         self.camera_center = (int(self.camera.get(3) / 2), int(self.camera.get(4) / 2))
         self.cal_cordintes()
         self.knn = Knn()
     
     def cal_cordintes(self):
+        '''
+            計算 9 個 block 的座標，生成偵測九宮格。
+        '''
         self.cordintes = np.array([])
         block_size = 130
         offset_camera_center = (self.camera_center[0] - block_size, self.camera_center[1] - block_size)
@@ -27,21 +33,33 @@ class Detector:
         
     
     def update_frame(self):
+        '''
+            更新畫面
+        '''
         _, frame = self.camera.read()
         self.frame = frame
     
     def draw_face_cordinates(self):
+        '''
+            畫出偵測九宮格
+        '''
         for cordinate in self.cordintes:
             point1 = tuple(cordinate[0])
             point2 = tuple(cordinate[1])
             cv2.rectangle(self.frame, point1, point2, (255, 255, 255), 2)
     
     def draw_arrow(self, arrow, color):
+        '''
+            畫出箭頭
+        '''
         point1 = self.arrow_points[arrow[0]]
         point2 = self.arrow_points[arrow[1]]
         self.frame = cv2.arrowedLine(self.frame, point1, point2, color, 10)
     
     def detect_color(self, frame=None):
+        '''
+            偵測顏色
+        '''
         if not frame:
             frame = self.frame
         frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)

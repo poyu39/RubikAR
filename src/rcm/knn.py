@@ -3,6 +3,9 @@ import math
 
 class Knn:
     def __init__(self):
+        '''
+            KNN 演算法
+        '''
         f = open('./rcm/dataset/output.txt', 'r')
         data = np.array([])
         line = f.readlines()
@@ -21,20 +24,32 @@ class Knn:
 
         self.X[..., 0] = X1
         self.X[..., 1] = X2
-        
 
     def predict_color(self, feature_Mat):
+        '''
+            預測面的顏色 9 個 block
+            
+            Args:
+                feature_Mat: 9 個 block 的特徵矩陣
+            Returns:
+                final_prediction_seq: 9 個 block 的顏色
+        '''
         final_prediction_seq = np.empty(9, dtype=str)
         for i, feature in enumerate(feature_Mat):
             final_prediction_seq[i] = self.predict_single_face_color(feature)
-        # 更改順序
-        # ordered_seq = [0, 3, 6, 1, 4, 7, 2, 5, 8]
-        # final_prediction_seq_ordered = np.empty(9, dtype=str)
-        # for i, index in enumerate(ordered_seq):
-        #     final_prediction_seq_ordered[i] = final_prediction_seq[index]
         return list(final_prediction_seq)
 
     def predict_single_face_color(self, features):
+        '''
+            預測單一個 block 的顏色
+            
+            利用 KNN 演算法，找出最近的 20 個點，並取出顏色。
+            
+            Args:
+                features: 一個 block 的特徵
+            Returns:
+                final_colour: 一個 block 的顏色
+        '''
         closest_dist = np.zeros((540))
         closest_label = np.empty(540, dtype=object)
         for i, training in enumerate(self.X):

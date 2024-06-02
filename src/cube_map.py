@@ -1,6 +1,5 @@
 import sys
 import json
-from pprint import pprint
 
 import pygame
 from magiccube.cube import Cube, Face, CubeMove
@@ -138,12 +137,6 @@ class CubeMap:
                     x , y = self.get_position(face, i)
                     pygame.draw.rect(self.window, self.get_color(color), (x, y, 50, 50))
                     pygame.draw.rect(self.window, self.get_color('border'), (x, y, 50, 50), 1)
-    
-    def update(self):
-        '''
-            更新 Rubik's cube map
-        '''
-        pass
     
     def draw_select_box(self, face):
         '''

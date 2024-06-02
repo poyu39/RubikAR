@@ -2,17 +2,22 @@ import os
 import cv2
 import numpy as np
 import argparse
-import random
 
 
 class Dataset:
     def __init__(self, camera=0, color='r'):
+        '''
+            生成資料集
+        '''
         self.camera = cv2.VideoCapture(camera)
         self.camera_center = (int(self.camera.get(3) / 2), int(self.camera.get(4) / 2))
         self.color = color
         self.cal_cordintes()
     
     def cal_cordintes(self):
+        '''
+            計算 9 個 block 的座標，生成偵測九宮格。
+        '''
         self.cordintes = np.array([])
         block_size = 130
         offset_camera_center = (self.camera_center[0] - block_size, self.camera_center[1] - block_size)
@@ -24,10 +29,16 @@ class Dataset:
         self.cordintes = self.cordintes.reshape((9, 2, 2)).astype(int)
     
     def update_frame(self):
+        '''
+            更新畫面
+        '''
         _, frame = self.camera.read()
         return frame
     
     def draw_face_cordinates(self, frame):
+        '''
+            畫出偵測九宮格
+        '''
         for cordinate in self.cordintes:
             point1 = tuple(cordinate[0])
             point2 = tuple(cordinate[1])
@@ -35,6 +46,9 @@ class Dataset:
         return frame
     
     def take_picture(self, frame):
+        '''
+            對現在九宮格內的 block 拍照
+        '''
         blocks = []
         for cordinate in self.cordintes:
             blocks.append(frame[cordinate[0, 1]:cordinate[1, 1], cordinate[0, 0]:cordinate[1, 0]])
